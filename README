@@ -1,9 +1,12 @@
-== managehosts ==
+managehosts
+-----------
 
-Author: Adam Bolte <adam.bolte@sitepoint.com><br>
+Author: Adam Bolte <adam.bolte@sitepoint.com>
 Copyright (c) 2011 SitePoint Pty Ltd. All rights reserved.
 
-=== Description ===
+
+Description
+===========
 
 Takes care of managing your hosts file entries (typically stored within
 /etc/hosts) under Cygwin, GNU/Linux or OS X. You can say goodbye to manual
@@ -11,12 +14,14 @@ error-prone hand-edits. Further, managehosts keeps track of entries it has
 added itself so it won't mess with existing customisations you may already
 have.
 
-=== Basic usage instructions ===
 
-Add a hosts entry
+Basic usage examples
+====================
+
+Add a hosts entry:
  # managehosts -i 1.2.3.4 -d upcomming-domain.com
 
-Add another hosts entry
+Add another hosts entry:
  # managehosts -i 4.3.2.1 -d another.domain.com
 
 List currently managed entries:
@@ -38,15 +43,29 @@ Purge all managed entries:
  Purging all entries...
   - 1.1.1.1 mysweetdomain.com
 
-=== To do ===
+
+Documentation
+=====================
+
+There is none. The command will provide verbose usage output when run without
+an argument. Alternatively, try running:
+ $ managehosts -h
+
+and look to the usage examples above.
+
+
+To do
+=====
 
 * The hosts file location should not be hard-coded, particularly for Cygwin.
 * There's probably a safe way to break up that regex string in checkValidIP()
 * Implement a -q (quiet) option to prevent writing output to the screen.
 
-=== Contribute ===
+
+Contribute
+==========
 
 Any contributions (patches, documentation improvements, etc.) are most welcome.
-Additioanlly, if you have tested managehosts under OS X 10.6 or newer, feedback
+Additionally, if you have tested managehosts under OS X 10.6 or newer, feedback
 would be appreciated as I no longer have a Mac to test with.
 
