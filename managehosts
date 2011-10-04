@@ -1,0 +1,329 @@
+#!/bin/bash
+# Adam Bolte <adam.bolte@sitepoint.com>
+#
+# Notes:
+# * "sed -i.bak ____ FILE && rm -f FILE.bak" is a workaround for what appears
+#   to be a bug on OS X's sed implementation.
+#
+
+## Declare global variables
+#
+declare -r version="0.1.3"
+declare -r managedHostsFile="/var/lib/managehosts/managed"
+declare -r managedHostsFileTmp="/var/lib/managehosts/managed.tmp"
+declare hostsFile
+declare ipAddr
+declare DNSName
+
+# 0 = add
+# 1 = delete specified line
+# 2 = delete all
+declare givenTask=0
+
+
+## Define functions
+#
+
+function printHelp()
+{
+	echo "\
+ USAGE
+	managehosts [OPTIONS]
+
+ DESCRIPTION
+ 	managehosts takes care of managing your /etc/hosts file by taking care
+	of any necessary edits. It keeps track of entries it manages, so is
+	quite safe.
+
+ OPTIONS
+	Generic Program Information
+	-h
+		Print this help message.
+	-l
+		List managed hosts.
+	-v
+		Print the version number of managehosts.
+	Function Selection
+	-D
+		Delete specified managed host entry. 
+	-P
+		Delete all existing managed hosts entries.
+	Input Specification
+	-i IPADDRESS
+		The IP address to add or delete.
+	-d HOSTNAME
+		The hostname to add or delete.\
+	"
+}
+
+function echoError()
+{
+	echo "${@}" 1>&2
+}
+
+function checkRoot()
+{
+	declare -i rootCheck=0
+
+	# There is generally no root user for Cygwin
+	uname | grep -qi cygwin
+	if [ "${?}" -eq 0 ]
+	then
+		# Primitive test for administration privileges
+		id -Gn | grep -q Administrators || \
+			rootCheck=1
+	elif [ "${UID}" -ne 0 ]
+	then
+		rootCheck=1
+	fi
+
+	if [ "${rootCheck}" -ne 0 ]
+	then
+		echoError "This task requires root privileges. Aborting."
+		exit 1
+	fi
+}
+
+function validateEnv()
+{
+	declare envCheckPass=0
+
+	# Check that we can locate the hosts file
+	if [ -f "/etc/hosts" ]
+	then
+		hostsFile="/etc/hosts"
+	elif [ -f "/cygdrive/c/Windows/System32/drivers/etc/hosts" ]
+	then
+		hostFile="/cygdrive/c/Windows/drivers/etc/hosts"
+	else
+		echoError "/etc/hosts not found. You call this *NIX?"
+		exit 1
+	fi
+
+	checkRoot
+
+	# Look for (and create if necessary) our managedHostsFile
+	if [ ! -d "${managedHostsFile%/*}" ]
+	then
+		mkdir -p "${managedHostsFile%/*}" && \
+		touch "${managedHostsFile}" && \
+		envCheckPass=1
+	elif [ ! -f "${managedHostsFile}" ]
+	then
+		touch "${managedHostsFile}" && \
+		envCheckPass=1
+	else
+		envCheckPass=1
+	fi
+
+	rm -f "${managedHostsFileTmp}"
+
+	# Check we didn't fail it
+	if [ "${envCheckPass}" -ne 1 ]
+	then
+		echoError "Error creating ${managedHostsFile}."
+		exit 1
+	fi
+}
+
+function checkValidIP()
+{
+	declare checkThisIP="${1}"
+
+	echo "$checkThisIP" | grep -Eq '^(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])\.){2}(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])$'
+	if [ "${?}" -ne 0 ]
+	then
+		echoError "Invalid IP address detected. Aborting."
+		exit 1
+	fi
+}
+
+function getParams()
+{
+	declare option
+	declare -i delIPAddrSel=0
+	declare -i purgeAllHostsSel=0
+	declare -i optionConflict=0
+
+	while getopts "hlvDPi:d:" option 2>/dev/null
+	do
+		case ${option} in
+			h )
+				printHelp
+				exit 0
+				;;
+			l )
+				listManagedHosts
+				exit 0
+				;;
+			v )
+				echo "version: ${version}"
+				exit 0
+				;;
+			D )
+				validateEnv
+				delIPAddrSel=1
+				;;	
+			P )
+				validateEnv
+				purgeAllHostsSel=1
+				;;	
+			i )
+				ipAddr="${OPTARG}"
+				checkValidIP "${ipAddr}"
+				;;
+			d )
+				DNSName="${OPTARG}"
+				;;
+			* )
+				echoError -n "Unimplemented option "
+				echoError "'${option}' given. Aborting."
+				;;
+		esac
+	done
+	shift $(($OPTIND - 1))
+
+	# Check for option conflicts
+	[ "${delIPAddrSel}" -eq 1 -a "${purgeAllHostsSel}" -eq 1 ] && optionConflict=1
+	[ "${purgeAllHostsSel}" -eq 1 -a -n "${ipAddr}" ] && optionConflict=1
+	[ "${purgeAllHostsSel}" -eq 1 -a -n "${DNSName}" ] && optionConflict=1
+
+	if [ "${optionConflict}" -eq 1 ]
+	then
+		echoError "Incompatible options select selected. Aborting."
+		exit 1
+	fi
+
+	if [ "${delIPAddrSel}" -eq 1 ]
+	then
+		if [ -n "${ipAddr}" ]
+		then
+			delIPAddr "${ipAddr}"
+		elif [ -n "${DNSName}" ]
+		then
+			delDNSName "${delDNSName}"
+		else
+			echoError "You must specify an entry to remove. Aborting."
+		fi
+	fi
+
+	[ "${purgeAllHostsSel}" -eq 1 ] && purgeAllHosts
+
+	# Add an address
+	if [ "${purgeAllHostsSel}" -eq 0 -a "${delIPAddrSel}" -eq 0 ]
+	then
+		if [ -n "${ipAddr}" -a -n "${DNSName}" ]
+		then
+			validateEnv
+			addAddress "${ipAddr}" "${DNSName}"
+		elif [ -z "${ipAddr}" -a -z "${DNSName}" ]
+		then
+			printHelp
+		else
+			echoError -n "To add an address, you must specify both the "
+			echoError "IP address *and* the alias."
+			exit 1
+		fi
+	fi
+}
+
+function addAddress()
+{
+	# Check if the user has requested us to update the IP
+	# of an existing DNS address. If so, delete it first.
+	grep -q "\ ${DNSName}$" "${managedHostsFile}"
+	if [ "${?}" -eq 0 ]
+	then
+		delDNSName "${DNSName}"
+	fi
+
+	# Looks like the last line doesn't end with a line-feed
+	# character, so we add one before continuing.
+	if [ "$(tail -n 1 "${hostsFile}" | wc -l)" -eq 0 ]
+	then
+		echo >> "${hostsFile}"
+	fi
+
+	# Add host to our managed list
+	echo "${ipAddr},${DNSName}" | sed -e 's/\./\\\./g' \
+		>> "${managedHostsFile}"
+
+	echo "${ipAddr} ${DNSName}" >> "${hostsFile}"
+}
+
+function delIPAddr()
+{
+	declare line
+	declare entry
+
+	entry="$(echo "${ipAddr}" | sed -e 's/\./\\\./g')"
+	mv "${managedHostsFile}" "${managedHostsFileTmp}"
+
+	# Lines look like 127\.0\.0\.1,google\.com, but we only look
+	# at the IP address part before the comma.
+	for line in $(cat ${managedHostsFileTmp})
+	do
+		lineIPAddr="$(echo ${line} | cut -d ',' -f 1)"
+		if [ "${entry}" = "${lineIPAddr}" ]
+		then
+			sed -i.bak "/^${lineIPAddr}\ /d" "${hostsFile}" \
+				&& rm -f "${hostsFile}.bak"
+		else
+			# We'll keep this line
+			echo "${line}" >> "${managedHostsFile}"
+		fi
+	done
+	rm -f "${managedHostsFileTmp}"
+}
+
+function delDNSName()
+{
+	declare line
+	declare entry
+
+	entry="$(echo "${DNSName}" | sed -e 's/\./\\\./g')"
+	mv "${managedHostsFile}" "${managedHostsFileTmp}"
+
+	# Lines look like 127\.0\.0\.1,google\.com, but we only look
+	# at the DNS name part after the comma.
+	for line in $(cat ${managedHostsFileTmp})
+	do
+		lineDNSName="$(echo ${line} | cut -d ',' -f 2)"
+		if [ "${entry}" = "${lineDNSName}" ]
+		then
+			sed -i.bak "/\ ${lineDNSName}$/d" "${hostsFile}" \
+				&& rm -f "${hostsFile}.bak"
+		else
+			# We'll keep this line
+			echo "${line}" >> "${managedHostsFile}"
+		fi
+	done
+	rm -f "${managedHostsFileTmp}"
+}
+
+function purgeAllHosts()
+{
+	declare line
+
+	echo "Purging all entries..."
+
+	# Lines look like 127\.0\.0\.1,google\.com
+	for line in $(cat ${managedHostsFile})
+	do
+		echo " - ${line}" | sed -e 's/\\//g;s/,/\ /'
+		sed -i.bak "/^$(echo ${line} | tr ',' ' ')$/d" "${hostsFile}" \
+			&& rm -f "${hostsFile}.bak"
+	done
+	rm -f "${managedHostsFile}"
+}
+
+function listManagedHosts()
+{
+	if [ -f "${managedHostsFile}" ]
+	then
+		cat "${managedHostsFile}" | sed -e 's/\\//g;s/,/\ /g'
+	fi
+}
+
+getParams $@
+

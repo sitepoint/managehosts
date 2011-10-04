@@ -1,0 +1,52 @@
+== managehosts ==
+
+Author: Adam Bolte <adam.bolte@sitepoint.com><br>
+Copyright (c) 2011 SitePoint Pty Ltd. All rights reserved.
+
+=== Description ===
+
+Takes care of managing your hosts file entries (typically stored within
+/etc/hosts) under Cygwin, GNU/Linux or OS X. You can say goodbye to manual
+error-prone hand-edits. Further, managehosts keeps track of entries it has
+added itself so it won't mess with existing customisations you may already
+have.
+
+=== Basic usage instructions ===
+
+Add a hosts entry
+ # managehosts -i 1.2.3.4 -d upcomming-domain.com
+
+Add another hosts entry
+ # managehosts -i 4.3.2.1 -d another.domain.com
+
+List currently managed entries:
+ $ managehosts -l
+ 1.2.3.4 upcomming-domain.com
+ 4.3.2.1 another.domain.com
+
+Delete upcomming-domain.com hosts entry:
+ # managehosts -D -d upcomming-domain.com
+
+Add one more hosts entry:
+ # managehosts -d mysweetdomain.com -i 1.1.1.1
+
+Delete a hosts entry by IP address:
+ # managehosts -D -i 4.3.2.1
+
+Purge all managed entries:
+ # managehosts -P
+ Purging all entries...
+  - 1.1.1.1 mysweetdomain.com
+
+=== To do ===
+
+* The hosts file location should not be hard-coded, particularly for Cygwin.
+* There's probably a safe way to break up that regex string in checkValidIP()
+* Implement a -q (quiet) option to prevent writing output to the screen.
+
+=== Contribute ===
+
+Any contributions (patches, documentation improvements, etc.) are most welcome.
+Additioanlly, if you have tested managehosts under OS X 10.6 or newer, feedback
+would be appreciated as I no longer have a Mac to test with.
+
