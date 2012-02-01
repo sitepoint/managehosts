@@ -1,0 +1,17 @@
+Source: managehosts
+Section: net
+Priority: optional
+Maintainer: Adam Bolte <adam.bolte@sitepoint.com>
+Build-Depends: debhelper (>= 7.0.50~)
+Standards-Version: 3.9.1
+Homepage: http://dev.sitepoint.com/
+#Vcs-Git: git://git.debian.org/collab-maint/managehosts.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/managehosts.git;a=summary
+
+Package: managehosts
+Architecture: all
+Depends: ${misc:Depends}, bash (>= 3.2), coreutils (>= 6.10), grep (>= 2.5.3), sed (>= 4.1.5)
+Description: Manages changes to your /etc/hosts file.
+ Say goodbye to manual error-prone hand-edits. managehosts also keeps track of
+ entries it has added itself so it won't mess with existing customizations you
+ may already have.

@@ -1,0 +1,8 @@
+Format: http://dep.debian.net/deps/dep5
+Upstream-Name: managehosts
+Source: http://www.sitepoint.com/
+
+Files: *
+Copyright: 2011,2012 SitePoint Pty Ltd
+License: None
+ This package is not licensed for use outside of SitePoint Pty Ltd.
