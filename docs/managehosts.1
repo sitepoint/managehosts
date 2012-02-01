@@ -1,0 +1,95 @@
+'\" -*- coding: us-ascii -*-
+.if \n(.g .ds T< \\FC
+.if \n(.g .ds T> \\F[\n[.fam]]
+.de URL
+\\$2 \(la\\$1\(ra\\$3
+..
+.if \n(.g .mso www.tmac
+.TH managehosts 1 "1 February 2012" "" ""
+.SH NAME
+managehosts \- hosts file management utility
+.SH SYNOPSIS
+.nf
+managehosts [option]...
+.fi
+.SH DESCRIPTION
+managehosts takes care of managing your /etc/hosts file by taking care
+of any necessary edits. It keeps track of entries it manages, so is
+quite safe.
+
+.SH OPTIONS
+.B Generic Program Information
+.
+.TP 
+\-h
+Print usage info.
+.TP 
+\-v
+Print the version number of managehosts.
+.TP 
+\-l
+List managed hosts.
+
+.TQ
+.B Function Selection
+.
+.TP 
+\-D
+Delete specified managed host entry.
+.TP 
+\-P
+Delete all existing managed hosts entries.
+
+.TQ
+.B Input Specification
+.TP 
+\-i IPADDRESS
+The IP address to add or delete.
+.TP 
+\-d HOSTNAME
+The hostname to add or delete.
+
+.SH EXAMPLES
+.TP
+Add a hosts entry:
+.B
+managehosts \-i 1.2.3.4 \-d upcomming-domain.com
+.TP
+Add another hosts entry:
+.B
+managehosts \-i 4.3.2.1 \-d another.domain.com
+.TP
+List currently managed entries:
+.B
+managehosts \-l
+.br
+1.2.3.4 upcomming-domain.com
+.br
+4.3.2.1 another.domain.com
+.TP
+Delete upcomming-domain.com hosts entry:
+.B
+managehosts \-D \-d upcomming-domain.com
+.TP
+Add one more hosts entry:
+.B
+managehosts \-d mysweetdomain.com \-i 1.1.1.1
+.TP
+Delete a hosts entry by IP address:
+.B
+managehosts \-D \-i 4.3.2.1
+.TP
+Purge all managed entries:
+.B
+managehosts \-P
+.br
+Purging all entries...
+.br
+ \- 1.1.1.1 mysweetdomain.com
+.SH FILES
+.I /etc/hosts
+
+.SH AUTHOR
+Adam Bolte <adam.bolte@sitepoint.com>
+.SH "SEE ALSO"
+.BR hosts (5)
