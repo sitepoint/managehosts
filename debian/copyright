@@ -1,8 +1,11 @@
 Format: http://dep.debian.net/deps/dep5
 Upstream-Name: managehosts
+Upstream-Maintainer: Adam Bolte <adam.bolte@sitepoint.com>
 Source: http://www.sitepoint.com/
 
 Files: *
 Copyright: 2011,2012 SitePoint Pty Ltd
-License: None
- This package is not licensed for use outside of SitePoint Pty Ltd.
+
+License: GPL-3+
+ On Debian systems, the complete text of the GNU General Public License
+ version 3 can be found in /usr/share/common-licenses/GPL-3 file.
