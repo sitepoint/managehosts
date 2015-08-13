@@ -123,12 +123,12 @@ function validateEnv()
 	# Look for (and create if necessary) our managedHostsFile
 	if [ ! -d "${managedHostsFile%/*}" ]
 	then
-		mkdir -p "${managedHostsFile%/*}" && \
-		touch "${managedHostsFile}" && \
+		install -m 0755 -d "${managedHostsFile%/*}" && \
+		install -m 0644 /dev/null "${managedHostsFile}" && \
 		envCheckPass=1
 	elif [ ! -f "${managedHostsFile}" ]
 	then
-		touch "${managedHostsFile}" && \
+		install -m 0644 /dev/null "${managedHostsFile}" && \
 		envCheckPass=1
 	else
 		envCheckPass=1
@@ -276,6 +276,7 @@ function delIPAddr()
 
 	entry="$(echo "${ipAddr}" | sed -e 's/\./\\\./g')"
 	mv "${managedHostsFile}" "${managedHostsFileTmp}"
+	install -m 0644 /dev/null "${managedHostsFile}"
 
 	# Lines look like 127\.0\.0\.1,google\.com, but we only look
 	# at the IP address part before the comma.
@@ -301,6 +302,7 @@ function delDNSName()
 
 	entry="$(echo "${DNSName}" | sed -e 's/\./\\\./g')"
 	mv "${managedHostsFile}" "${managedHostsFileTmp}"
+	install -m 0644 /dev/null "${managedHostsFile}"
 
 	# Lines look like 127\.0\.0\.1,google\.com, but we only look
 	# at the DNS name part after the comma.
