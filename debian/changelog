@@ -1,3 +1,12 @@
+managehosts (0.2.0-1) unstable; urgency=medium
+
+  * Added licensing information.
+  * Added Debian packaging files.
+  * Added man page information.
+  * Fix permission errors for some umask values.
+
+ -- Adam Bolte <abolte@systemsaviour.com>  Thu, 13 Aug 2015 15:22:54 +1000
+
 managehosts (0.1.3-1) unstable; urgency=low
 
   * Initial packaged release.

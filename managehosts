@@ -26,7 +26,7 @@
 
 ## Declare global variables
 #
-declare -r version="0.1.3"
+declare -r version="0.2.0"
 declare -r managedHostsFile="/var/lib/managehosts/managed"
 declare -r managedHostsFileTmp="/var/lib/managehosts/managed.tmp"
 declare hostsFile
